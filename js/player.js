@@ -535,8 +535,9 @@ class VideoPlayer {
         console.log('Player state:', state);
 
         // Auto-play next video when current ends
-        if (event.data === YT.PlayerState.ENDED) {
+        if (event.data === YT.PlayerState.ENDED || event.data === 0) {
             if (!this.isLiveMode) {
+                console.log('Video ended, triggering playNext...');
                 this.playNext();
             }
         }
@@ -633,7 +634,17 @@ class VideoPlayer {
      * Play next video in playlist
      */
     playNext() {
+        if (!this.playlist || this.playlist.length === 0) {
+            console.warn('Cannot play next: Playlist is empty');
+            return;
+        }
+
         const playbackOrder = Utils.storage.get('playbackOrder') || 'sequential';
+
+        // Ensure currentIndex is valid
+        if (typeof this.currentIndex !== 'number' || isNaN(this.currentIndex)) {
+            this.currentIndex = 0;
+        }
 
         if (playbackOrder === 'random' && this.playlist.length > 1) {
             let nextIndex;
@@ -652,6 +663,13 @@ class VideoPlayer {
 
         const videoId = this.playlist[this.currentIndex];
         
+        if (!videoId) {
+            console.error('Invalid video ID at index', this.currentIndex);
+            // Try next one
+            setTimeout(() => this.playNext(), 500);
+            return;
+        }
+
         try {
             this.player.loadVideoById(videoId);
             this.updateProgramInfo();
