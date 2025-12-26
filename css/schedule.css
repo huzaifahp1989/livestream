@@ -313,3 +313,21 @@
     gap: var(--spacing-md);
     margin-top: var(--spacing-lg);
 }
+
+/* Content Type Specific Styles */
+.schedule-content--video {
+    background: rgba(139, 92, 246, 0.2); /* Purple for video */
+    border-left: 3px solid #8b5cf6;
+}
+
+.schedule-content--playlist {
+    background: rgba(59, 130, 246, 0.2); /* Blue for playlist */
+    border-left: 3px solid #3b82f6;
+}
+
+.schedule-program__sub {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+    margin-top: 2px;
+}

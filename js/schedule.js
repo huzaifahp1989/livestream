@@ -247,11 +247,14 @@ class ScheduleManager {
         if (program) {
             const endTime = this.calculateEndTime(program.startTime, program.duration);
             const type = program.type || 'recorded';
+            const contentType = program.contentType || 'playlist';
+            const icon = contentType === 'video' ? '🎥' : '📺';
             
             cell.innerHTML = `
-                <div class="schedule-program schedule-program--${type}">
-                    <div class="schedule-program__title">${program.title || program.program}</div>
+                <div class="schedule-program schedule-program--${type} schedule-content--${contentType}">
+                    <div class="schedule-program__title">${icon} ${program.title || program.program}</div>
                     <div class="schedule-program__time">${program.startTime} - ${endTime}</div>
+                    ${program.contentName ? `<div class="schedule-program__sub">${program.contentName}</div>` : ''}
                 </div>
             `;
             
@@ -275,12 +278,15 @@ class ScheduleManager {
     createProgramCard(program) {
         const card = document.createElement('div');
         card.className = `program-card program-card--${program.type}`;
+        const contentType = program.contentType || 'playlist';
+        const icon = contentType === 'video' ? '🎥' : '📺';
 
         card.innerHTML = `
             <div class="program-card__time">${program.startTime} - ${program.endTime}</div>
-            <h3 class="program-card__title">${program.program}</h3>
+            <h3 class="program-card__title">${icon} ${program.program}</h3>
+            ${program.contentName ? `<div class="program-card__subtitle">Playing: ${program.contentName}</div>` : ''}
             <p class="program-card__description">${program.description}</p>
-            <span class="program-card__type">${program.type}</span>
+            <span class="program-card__type">${program.type || 'Recorded'}</span>
         `;
 
         card.addEventListener('click', () => this.openProgramModal(program));
@@ -337,7 +343,8 @@ class ScheduleManager {
         if (event.recurrence === 'weekly') {
             const day = targetDate.getDay();
             if (event.days && event.days.length) {
-                return event.days.includes(day);
+                // Handle both number and string types
+                return event.days.includes(day) || event.days.includes(String(day));
             }
             // Fallback to start date's day if no specific days selected
             return day === eventStart.getDay();
