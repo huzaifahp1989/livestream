@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Watch Islamic lectures, programs, and documentaries - Islamic Live TV Recordings">
+    <meta name="theme-color" content="#1a1a2e">
+    
+    <title>Recordings - Islamic Live TV</title>
+    
+    <link rel="icon" type="image/png" href="./assets/images/favicon.png">
+    <link rel="manifest" href="./manifest.json">
+    
+    <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/recordings.css">
+    <link rel="stylesheet" href="./css/responsive.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header__content">
+                <div class="header__logo">
+                    <img src="./assets/images/logo.png" alt="Islamic Live TV" class="logo__image">
+                    <span class="logo__text">Islamic Live TV</span>
+                </div>
+                
+                <nav class="nav" id="mainNav">
+                    <ul class="nav__list">
+                        <li class="nav__item"><a href="index.html" class="nav__link">Live</a></li>
+                        <li class="nav__item"><a href="recordings.html" class="nav__link nav__link--active">Recordings</a></li>
+                        <li class="nav__item"><a href="schedule.html" class="nav__link">Schedule</a></li>
+                        <li class="nav__item"><a href="admin.html" class="nav__link">Admin</a></li>
+                    </ul>
+                </nav>
+                
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1 class="page-header__title">Programs Archive</h1>
+            <p class="page-header__subtitle">Watch previous programs and recordings anytime</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Search and Filter Bar -->
+            <div class="filter-bar">
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Search recordings..." class="search-input">
+                </div>
+                
+                <div class="filter-tabs">
+                    <button class="filter-tab filter-tab--active" data-category="all">All</button>
+                    <button class="filter-tab" data-category="lectures">Lectures</button>
+                    <button class="filter-tab" data-category="kids">Kids Shows</button>
+                    <button class="filter-tab" data-category="documentaries">Documentaries</button>
+                    <button class="filter-tab" data-category="events">Events</button>
+                </div>
+            </div>
+
+            <!-- Recordings Grid -->
+            <div class="recordings-grid" id="recordingsGrid">
+                <!-- Recordings will be dynamically loaded here -->
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <p>Loading recordings...</p>
+                </div>
+            </div>
+
+            <!-- Load More Button -->
+            <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+                <button class="btn btn--secondary" id="loadMoreButton">Load More</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Video Modal -->
+    <div class="modal" id="videoModal" style="display: none;">
+        <div class="modal__backdrop" id="modalBackdrop"></div>
+        <div class="modal__content">
+            <button class="modal__close" id="closeModal" aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+            
+            <div class="modal__video">
+                <div id="modalPlayer"></div>
+            </div>
+            
+            <div class="modal__info">
+                <h2 class="modal__title" id="modalTitle"></h2>
+                <div class="modal__meta">
+                    <span class="modal__category" id="modalCategory"></span>
+                    <span class="modal__duration" id="modalDuration"></span>
+                    <span class="modal__date" id="modalDate"></span>
+                </div>
+                <p class="modal__description" id="modalDescription"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__grid">
+                <div class="footer__column">
+                    <h4 class="footer__title">About Us</h4>
+                    <p class="footer__text">Broadcasting Islamic content 24/7 to spread knowledge and strengthen faith worldwide.</p>
+                </div>
+                
+                <div class="footer__column">
+                    <h4 class="footer__title">Quick Links</h4>
+                    <ul class="footer__links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="recordings.html">Recordings</a></li>
+                        <li><a href="schedule.html">Schedule</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer__column">
+                    <h4 class="footer__title">Legal</h4>
+                    <ul class="footer__links">
+                        <li><a href="#privacy">Privacy Policy</a></li>
+                        <li><a href="#terms">Terms of Service</a></li>
+                        <li><a href="#cookies">Cookie Policy</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer__column">
+                    <h4 class="footer__title">Contact</h4>
+                    <p class="footer__text">
+                        Email: info@islamiclivetv.com<br>
+                        Phone: +1 (555) 123-4567
+                    </p>
+                </div>
+            </div>
+            
+            <div class="footer__bottom">
+                <p class="footer__copyright">&copy; 2025 Islamic Live TV. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="./js/config.js"></script>
+    <script src="./js/utils.js"></script>
+    <script src="./js/recordings.js"></script>
+    <script src="./js/main.js"></script>
+    
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>

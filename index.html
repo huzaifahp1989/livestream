@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="24/7 Islamic Live TV Channel - Watch live Islamic content, lectures, programs and more">
+    <meta name="keywords" content="Islamic TV, Live Stream, Islamic Lectures, Quran, Islamic Programs">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Islamic Live TV - 24/7 Live Stream">
+    <meta property="og:description" content="Watch 24/7 Islamic content, lectures and programs">
+    <meta property="og:image" content="/assets/images/og-image.jpg">
+    
+    <title>Islamic Live TV - 24/7 Live Stream</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="./assets/images/favicon.png">
+    <link rel="apple-touch-icon" href="./assets/images/icon-192.png">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/player.css">
+    <link rel="stylesheet" href="./css/responsive.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header__content">
+                <div class="header__logo">
+                    <img src="./assets/images/logo.png" alt="Islamic Live TV" class="logo__image">
+                    <span class="logo__text">Islamic Live TV</span>
+                </div>
+                
+                <nav class="nav" id="mainNav">
+                    <ul class="nav__list">
+                        <li class="nav__item"><a href="index.html" class="nav__link nav__link--active">Live</a></li>
+                        <li class="nav__item"><a href="recordings.html" class="nav__link">Recordings</a></li>
+                        <li class="nav__item"><a href="schedule.html" class="nav__link">Schedule</a></li>
+                        <li class="nav__item"><a href="admin.html" class="nav__link">Admin</a></li>
+                    </ul>
+                </nav>
+                
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Live Status Badge -->
+    <div class="live-badge" id="liveBadge">
+        <span class="live-badge__dot"></span>
+        <span class="live-badge__text">LIVE 24/7</span>
+    </div>
+
+    <!-- Main Video Player Section -->
+    <main class="main">
+        <section class="player-section">
+            <!-- Video Player -->
+            <div class="player-container" id="playerContainer">
+                <div class="player-wrapper">
+                    <div id="videoPlayer"></div>
+                    <div class="player-overlay" id="playerOverlay">
+                        <button class="play-button" id="playButton">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        </button>
+                        <div class="overlay-info">
+                            <span class="overlay-tip" id="overlayTip">Tap to unmute</span>
+                            <span class="overlay-source" id="sourceIndicator">Source: Playlist</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lower Third Banner Removed -->
+
+                <!-- Prayer Time Ticker -->
+                <div class="prayer-ticker" id="prayerTicker">
+                    <div class="prayer-ticker__scroll-container">
+                        <div class="prayer-ticker__scroll-text">
+                            <span>Islam Media Central TV</span>
+                            <span class="separator">•</span>
+                            <span>Live 24/7 Islamic Content</span>
+                            <span class="separator">•</span>
+                            <span>Support us by Donating</span>
+                            <span class="separator">•</span>
+                            <span>Download our App for best experience</span>
+                            <span class="separator">•</span>
+                            <span>Follow the Sunnah</span>
+                            <span class="separator">•</span>
+                        </div>
+                        <div class="prayer-ticker__scroll-text" aria-hidden="true">
+                            <span>Islam Media Central TV</span>
+                            <span class="separator">•</span>
+                            <span>Live 24/7 Islamic Content</span>
+                            <span class="separator">•</span>
+                            <span>Support us by Donating</span>
+                            <span class="separator">•</span>
+                            <span>Download our App for best experience</span>
+                            <span class="separator">•</span>
+                            <span>Follow the Sunnah</span>
+                            <span class="separator">•</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Program Info Panel -->
+            <div class="program-info">
+                <div class="container">
+                    <div class="program-info__grid">
+                        <div class="program-card program-card--now-playing">
+                            <h3 class="program-card__label">
+                                <span class="live-indicator"></span>
+                                Now Playing
+                            </h3>
+                            <h2 class="program-card__title" id="nowPlayingTitle">Islamic Lecture Series</h2>
+                            <p class="program-card__description" id="nowPlayingDescription">Join us for enlightening Islamic lectures and discussions</p>
+                            <div class="program-card__meta">
+                                <span class="program-card__time" id="nowPlayingTime">Started at 2:00 PM</span>
+                                <span class="program-card__viewers" id="viewerCount">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                    </svg>
+                                    1,234 watching
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="program-card program-card--up-next">
+                            <h3 class="program-card__label">Up Next</h3>
+                            <h2 class="program-card__title" id="upNextTitle">Quran Recitation</h2>
+                            <p class="program-card__description" id="upNextDescription">Beautiful recitation of the Holy Quran</p>
+                            <div class="program-card__meta">
+                                <span class="program-card__time" id="upNextTime">4:00 PM</span>
+                            </div>
+                        </div>
+
+                        <div class="program-card program-card--coming-soon">
+                            <h3 class="program-card__label">
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                                    <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                                </svg>
+                                Coming Soon
+                            </h3>
+                            <h2 class="program-card__title" id="comingSoonTitle">Live Friday Khutbah</h2>
+                            <p class="program-card__description" id="comingSoonDescription">Special live broadcast this Friday</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Emergency Broadcast Banner -->
+        <div class="emergency-banner" id="emergencyBanner" style="display: none;">
+            <div class="container">
+                <div class="emergency-banner__content">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                        <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                    </svg>
+                    <span id="emergencyMessage">Important announcement</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Donation Bar -->
+        <section class="donation-section">
+            <div class="container">
+                <div class="donation-bar">
+                    <div class="donation-bar__content">
+                        <h3 class="donation-bar__title">Support Our Channel</h3>
+                        <p class="donation-bar__text">Help us continue spreading knowledge and faith</p>
+                        <button class="btn btn--primary" id="donateButton">Donate Now</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Social & Share Section -->
+        <section class="social-section">
+            <div class="container">
+                <h3 class="social-section__title">Connect With Us</h3>
+                <div class="social-links">
+                    <a href="#" class="social-link" aria-label="Facebook">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="social-link" aria-label="YouTube">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Twitter">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Instagram">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/>
+                        </svg>
+                    </a>
+                </div>
+                
+                <div class="share-buttons">
+                    <button class="btn btn--secondary" id="shareButton">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+                        </svg>
+                        Share
+                    </button>
+                    <button class="btn btn--secondary" id="downloadAppButton">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                        </svg>
+                        Download App
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__grid">
+                <div class="footer__column">
+                    <h4 class="footer__title">About Us</h4>
+                    <p class="footer__text">Broadcasting Islamic content 24/7 to spread knowledge and strengthen faith worldwide.</p>
+                </div>
+                
+                <div class="footer__column">
+                    <h4 class="footer__title">Quick Links</h4>
+                    <ul class="footer__links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="recordings.html">Recordings</a></li>
+                        <li><a href="schedule.html">Schedule</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer__column">
+                    <h4 class="footer__title">Legal</h4>
+                    <ul class="footer__links">
+                        <li><a href="#privacy">Privacy Policy</a></li>
+                        <li><a href="#terms">Terms of Service</a></li>
+                        <li><a href="#cookies">Cookie Policy</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer__column">
+                    <h4 class="footer__title">Contact</h4>
+                    <p class="footer__text">
+                        Email: info@islamiclivetv.com<br>
+                        Phone: +1 (555) 123-4567
+                    </p>
+                </div>
+            </div>
+            
+            <div class="footer__bottom">
+                <p class="footer__copyright">&copy; 2025 Islamic Live TV. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cookie Consent Banner -->
+    <div class="cookie-banner" id="cookieBanner">
+        <div class="cookie-banner__content">
+            <p class="cookie-banner__text">
+                We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.
+            </p>
+            <div class="cookie-banner__actions">
+                <button class="btn btn--primary btn--sm" id="acceptCookies">Accept</button>
+                <button class="btn btn--secondary btn--sm" id="declineCookies">Decline</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Install PWA Prompt -->
+    <div class="install-prompt" id="installPrompt" style="display: none;">
+        <div class="install-prompt__content">
+            <h4>Install App</h4>
+            <p>Add Islamic Live TV to your home screen for quick access!</p>
+            <button class="btn btn--primary btn--sm" id="installButton">Install</button>
+            <button class="btn btn--text btn--sm" id="dismissInstall">Not now</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Firebase SDKs (compat version for simplicity) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+    
+    <script src="/js/config.js?v=1"></script>
+    <script src="/js/utils.js?v=1"></script>
+    <script src="/js/cloud.js?v=1"></script>
+    <script src="/js/player.js?v=1"></script>
+    <script src="/js/analytics.js?v=1"></script>
+    <script src="/js/pwa.js?v=1"></script>
+    <script src="/js/main.js?v=1"></script>
+    
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>

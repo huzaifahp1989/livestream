@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // PUBLIC READ/WRITE ACCESS
+    // Required because we are using a simple config-based admin system
+    // without Firebase Authentication integration.
+    
+    // 1. App Data (Playlists, Config)
+    match /app_data/{document=**} {
+      allow read, write: if true;
+    }
+
+    // 2. Analytics (View counts, Play events)
+    match /analytics/{document=**} {
+      allow create: if true; // Allow anyone to log a view
+      allow read: if true;   // Allow admin to read
+      allow update, delete: if false; // Prevent tampering
+    }
+
+    // 3. System Logs (Errors, Sync events)
+    match /system_logs/{document=**} {
+      allow create: if true;
+      allow read: if true;
+      allow update, delete: if false;
+    }
+    
+    // Default deny for everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

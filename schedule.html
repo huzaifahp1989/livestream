@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="View program schedule - Islamic Live TV">
+    <meta name="theme-color" content="#1a1a2e">
+    
+    <title>Schedule - Islamic Live TV</title>
+    
+    <link rel="icon" type="image/png" href="./assets/images/favicon.png">
+    <link rel="manifest" href="./manifest.json">
+    
+    <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/schedule.css">
+    <link rel="stylesheet" href="./css/responsive.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header__content">
+                <div class="header__logo">
+                    <img src="./assets/images/logo.png" alt="Islamic Live TV" class="logo__image">
+                    <span class="logo__text">Islamic Live TV</span>
+                </div>
+                
+                <nav class="nav" id="mainNav">
+                    <ul class="nav__list">
+                        <li class="nav__item"><a href="index.html" class="nav__link">Live</a></li>
+                        <li class="nav__item"><a href="recordings.html" class="nav__link">Recordings</a></li>
+                        <li class="nav__item"><a href="schedule.html" class="nav__link nav__link--active">Schedule</a></li>
+                        <li class="nav__item"><a href="admin.html" class="nav__link">Admin</a></li>
+                    </ul>
+                </nav>
+                
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1 class="page-header__title">Program Schedule</h1>
+            <p class="page-header__subtitle">Plan your viewing with our comprehensive program guide</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Schedule Controls -->
+            <div class="schedule-controls">
+                <div class="view-toggle">
+                    <button class="view-toggle__btn view-toggle__btn--active" data-view="weekly">Weekly</button>
+                    <button class="view-toggle__btn" data-view="daily">Daily</button>
+                </div>
+                
+                <div class="timezone-selector">
+                    <label for="timezoneSelect">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                        </svg>
+                        Timezone:
+                    </label>
+                    <select id="timezoneSelect" class="timezone-select">
+                        <option value="auto">Auto-detect</option>
+                        <option value="America/New_York">EST (UTC-5)</option>
+                        <option value="America/Chicago">CST (UTC-6)</option>
+                        <option value="America/Denver">MST (UTC-7)</option>
+                        <option value="America/Los_Angeles">PST (UTC-8)</option>
+                        <option value="Europe/London">GMT (UTC+0)</option>
+                        <option value="Europe/Paris">CET (UTC+1)</option>
+                        <option value="Asia/Dubai">GST (UTC+4)</option>
+                        <option value="Asia/Karachi">PKT (UTC+5)</option>
+                        <option value="Asia/Dhaka">BST (UTC+6)</option>
+                        <option value="Asia/Jakarta">WIB (UTC+7)</option>
+                    </select>
+                </div>
+                
+                <div class="date-navigation">
+                    <button class="btn btn--icon" id="prevWeek" aria-label="Previous week">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                        </svg>
+                    </button>
+                    <span class="current-date" id="currentDate">Week of Dec 25, 2025</span>
+                    <button class="btn btn--icon" id="nextWeek" aria-label="Next week">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Weekly Schedule View -->
+            <div class="schedule-view schedule-view--weekly" id="weeklyView">
+                <div class="schedule-table">
+                    <div class="schedule-header">
+                        <div class="schedule-header__time">Time</div>
+                        <div class="schedule-header__days" id="scheduleHeaderDays">
+                            <!-- Days will be dynamically populated -->
+                        </div>
+                    </div>
+                    
+                    <div class="schedule-body" id="scheduleBody">
+                        <!-- Schedule items will be dynamically populated -->
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                            <p>Loading schedule...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Schedule View -->
+            <div class="schedule-view schedule-view--daily" id="dailyView" style="display: none;">
+                <div class="daily-schedule" id="dailySchedule">
+                    <!-- Daily schedule items will be dynamically populated -->
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="schedule-legend">
+                <h3 class="schedule-legend__title">Legend</h3>
+                <div class="schedule-legend__items">
+                    <div class="legend-item">
+                        <span class="legend-item__indicator legend-item__indicator--live"></span>
+                        <span class="legend-item__label">Live Broadcast</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-item__indicator legend-item__indicator--recorded"></span>
+                        <span class="legend-item__label">Recorded Program</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-item__indicator legend-item__indicator--playlist"></span>
+                        <span class="legend-item__label">Auto Playlist</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-item__indicator legend-item__indicator--special"></span>
+                        <span class="legend-item__label">Special Event</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Program Details Modal -->
+    <div class="modal" id="programModal" style="display: none;">
+        <div class="modal__backdrop" id="modalBackdrop"></div>
+        <div class="modal__content modal__content--program">
+            <button class="modal__close" id="closeModal" aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+            
+            <div class="program-details">
+                <div class="program-details__header">
+                    <h2 class="program-details__title" id="programTitle"></h2>
+                    <span class="program-details__type" id="programType"></span>
+                </div>
+                
+                <div class="program-details__meta">
+                    <div class="meta-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                        </svg>
+                        <span id="programTime"></span>
+                    </div>
+                    <div class="meta-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+                        </svg>
+                        <span id="programDate"></span>
+                    </div>
+                    <div class="meta-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        <span id="programDuration"></span>
+                    </div>
+                </div>
+                
+                <div class="program-details__description">
+                    <h3>Description</h3>
+                    <p id="programDescription"></p>
+                </div>
+                
+                <div class="program-details__actions">
+                    <button class="btn btn--primary" id="setReminderButton">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                        </svg>
+                        Set Reminder
+                    </button>
+                    <button class="btn btn--secondary" id="shareProgram">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+                        </svg>
+                        Share
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__grid">
+                <div class="footer__column">
+                    <h4 class="footer__title">About Us</h4>
+                    <p class="footer__text">Broadcasting Islamic content 24/7 to spread knowledge and strengthen faith worldwide.</p>
+                </div>
+                
+                <div class="footer__column">
+                    <h4 class="footer__title">Quick Links</h4>
+                    <ul class="footer__links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="recordings.html">Recordings</a></li>
+                        <li><a href="schedule.html">Schedule</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer__column">
+                    <h4 class="footer__title">Legal</h4>
+                    <ul class="footer__links">
+                        <li><a href="#privacy">Privacy Policy</a></li>
+                        <li><a href="#terms">Terms of Service</a></li>
+                        <li><a href="#cookies">Cookie Policy</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer__column">
+                    <h4 class="footer__title">Contact</h4>
+                    <p class="footer__text">
+                        Email: info@islamiclivetv.com<br>
+                        Phone: +1 (555) 123-4567
+                    </p>
+                </div>
+            </div>
+            
+            <div class="footer__bottom">
+                <p class="footer__copyright">&copy; 2025 Islamic Live TV. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="./js/config.js"></script>
+    <script src="./js/utils.js"></script>
+    <script src="./js/schedule.js"></script>
+    <script src="./js/main.js"></script>
+</body>
+</html>

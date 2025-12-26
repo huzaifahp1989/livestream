@@ -1,0 +1,98 @@
+{
+    "name": "Islamic Live TV",
+    "short_name": "Islamic TV",
+    "description": "24/7 Islamic Live TV Channel - Watch live Islamic content, lectures, programs and more",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0a0e27",
+    "theme_color": "#1a1a2e",
+    "orientation": "any",
+    "categories": ["education", "entertainment", "lifestyle"],
+    "icons": [
+        {
+            "src": "/assets/images/icon-72.png",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/images/icon-96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/images/icon-128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/images/icon-144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/images/icon-152.png",
+            "sizes": "152x152",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/images/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/images/icon-384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/images/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/assets/images/screenshot1.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "label": "Live TV Stream"
+        },
+        {
+            "src": "/assets/images/screenshot2.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "label": "Program Schedule"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Watch Live",
+            "short_name": "Live",
+            "description": "Watch live stream",
+            "url": "/",
+            "icons": [{ "src": "/assets/images/icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Recordings",
+            "short_name": "Archive",
+            "description": "Browse recordings",
+            "url": "/recordings.html",
+            "icons": [{ "src": "/assets/images/icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Schedule",
+            "short_name": "Schedule",
+            "description": "View program schedule",
+            "url": "/schedule.html",
+            "icons": [{ "src": "/assets/images/icon-192.png", "sizes": "192x192" }]
+        }
+    ]
+}
