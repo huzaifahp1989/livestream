@@ -183,43 +183,108 @@ class VideoPlayer {
      */
     checkSchedule(force = false, checkContent = false) {
         const now = new Date();
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const scheduleEvents = Utils.storage.get('scheduleEvents') || [];
         
-        const rules = Utils.storage.get('playlistSchedule') || [];
-        
-        let activeRule = null;
+        let activeEvent = null;
         let maxPriority = -1;
 
-        rules.forEach(rule => {
-            const [h, m] = rule.time.split(':').map(Number);
-            const ruleMinutes = h * 60 + m;
+        // Priority: One-time (3) > Monthly (2) > Weekly (1) > Daily (0)
+        
+        scheduleEvents.forEach(event => {
+            if (this.isEventActive(event, now)) {
+                let priority = -1;
+                if (event.recurrence === 'daily') priority = 0;
+                else if (event.recurrence === 'weekly') priority = 1;
+                else if (event.recurrence === 'monthly') priority = 2;
+                else if (event.recurrence === 'none') priority = 3;
 
-            if (ruleMinutes > currentMinutes) return;
-
-            let priority = -1;
-            if (rule.type === 'daily') priority = 0;
-            else if (rule.type === 'weekly' && rule.dayOfWeek == now.getDay()) priority = 1;
-            else if (rule.type === 'monthly' && rule.dayOfMonth == now.getDate()) priority = 2;
-            else if (rule.type === 'date' && rule.date === now.toISOString().split('T')[0]) priority = 3;
-
-            if (priority > maxPriority) {
-                maxPriority = priority;
-                activeRule = rule;
-            } else if (priority === maxPriority) {
-                const activeTime = activeRule ? activeRule.time.split(':').map(Number) : [-1, -1];
-                const activeMinutes = activeTime[0] * 60 + activeTime[1];
-                if (ruleMinutes > activeMinutes) activeRule = rule;
+                if (priority > maxPriority) {
+                    maxPriority = priority;
+                    activeEvent = event;
+                }
             }
         });
 
-        const targetPlaylistId = activeRule ? activeRule.playlistId : 'default';
+        // Fallback to legacy playlistSchedule if no active event found
+        if (!activeEvent) {
+             const rules = Utils.storage.get('playlistSchedule') || [];
+             const currentMinutes = now.getHours() * 60 + now.getMinutes();
+             
+             let activeRule = null;
+             let maxRulePriority = -1;
 
-        if (force || targetPlaylistId !== this.currentPlaylistId) {
-            console.log(`Switching to playlist: ${targetPlaylistId}`);
-            this.loadPlaylist(targetPlaylistId);
+             rules.forEach(rule => {
+                const [h, m] = rule.time.split(':').map(Number);
+                const ruleMinutes = h * 60 + m;
+
+                if (ruleMinutes > currentMinutes) return;
+
+                let priority = -1;
+                if (rule.type === 'daily') priority = 0;
+                else if (rule.type === 'weekly' && rule.dayOfWeek == now.getDay()) priority = 1;
+                else if (rule.type === 'monthly' && rule.dayOfMonth == now.getDate()) priority = 2;
+                else if (rule.type === 'date' && rule.date === now.toISOString().split('T')[0]) priority = 3;
+
+                if (priority > maxRulePriority) {
+                    maxRulePriority = priority;
+                    activeRule = rule;
+                } else if (priority === maxRulePriority) {
+                    const activeTime = activeRule ? activeRule.time.split(':').map(Number) : [-1, -1];
+                    const activeMinutes = activeTime[0] * 60 + activeTime[1];
+                    if (ruleMinutes > activeMinutes) activeRule = rule;
+                }
+            });
+            
+            if (activeRule) {
+                // Adapt legacy rule to event format
+                activeEvent = {
+                    contentType: 'playlist',
+                    contentId: activeRule.playlistId,
+                    title: 'Scheduled Playlist'
+                };
+            }
+        }
+
+        let targetContentId = 'default';
+        let targetContentType = 'playlist';
+
+        if (activeEvent) {
+            targetContentId = activeEvent.contentId || activeEvent.playlistId || 'default'; // Fallback for legacy
+            targetContentType = activeEvent.contentType || 'playlist';
+            console.log(`Active Schedule Event: ${activeEvent.title} (${targetContentType}: ${targetContentId})`);
+        } else {
+            console.log('No active schedule, using default playlist');
+        }
+
+        // Handle Video Content Type
+        if (targetContentType === 'video') {
+            const pseudoPlaylistId = 'video-' + targetContentId;
+            
+            if (force || this.currentPlaylistId !== pseudoPlaylistId) {
+                console.log(`Switching to single video: ${targetContentId}`);
+                this.currentPlaylistId = pseudoPlaylistId;
+                this.playlist = [targetContentId];
+                this.currentIndex = 0;
+                
+                if (this.player && typeof this.player.loadVideoById === 'function') {
+                    this.player.loadVideoById(targetContentId);
+                    this.updateProgramInfo(); // Assuming this exists or will handle UI
+                }
+                
+                // Update UI message
+                const msg = document.getElementById('emptyPlaylistMsg');
+                if (msg) msg.style.display = 'none';
+            }
+            return;
+        }
+
+        // Handle Playlist Content Type
+        if (force || targetContentId !== this.currentPlaylistId) {
+            console.log(`Switching to playlist: ${targetContentId}`);
+            this.loadPlaylist(targetContentId);
         } else if (checkContent) {
             const storedPlaylists = Utils.storage.get('adminPlaylists') || {};
-            let storedPlaylist = storedPlaylists[targetPlaylistId];
+            let storedPlaylist = storedPlaylists[targetContentId];
             
             // STRICT MODE: NO LEGACY FALLBACK
             
@@ -231,6 +296,67 @@ class VideoPlayer {
             }
         }
     }
+
+    /**
+     * Check if a schedule event is currently active
+     */
+    isEventActive(event, now) {
+        if (!event.startDate || !event.startTime) return false;
+
+        const [startHour, startMin] = event.startTime.split(':').map(Number);
+        const duration = parseInt(event.duration || 60);
+        
+        // Check date/recurrence first
+        let dateMatch = false;
+        const eventStartDate = new Date(event.startDate);
+        const todayDateStr = now.toISOString().split('T')[0];
+        
+        if (event.recurrence === 'none') {
+            dateMatch = (event.startDate === todayDateStr);
+        } else if (event.recurrence === 'daily') {
+            // Check if start date is in the past or today
+            const startCheck = new Date(event.startDate);
+            startCheck.setHours(0,0,0,0);
+            const todayCheck = new Date(now);
+            todayCheck.setHours(0,0,0,0);
+            dateMatch = (todayCheck >= startCheck);
+        } else if (event.recurrence === 'weekly') {
+            const startCheck = new Date(event.startDate);
+            startCheck.setHours(0,0,0,0);
+            const todayCheck = new Date(now);
+            todayCheck.setHours(0,0,0,0);
+            
+            if (todayCheck >= startCheck) {
+                const day = now.getDay();
+                if (event.days && event.days.length) {
+                    dateMatch = event.days.includes(day) || event.days.includes(String(day));
+                } else {
+                    // Fallback to start date's day
+                    dateMatch = (day === eventStartDate.getDay());
+                }
+            }
+        } else if (event.recurrence === 'monthly') {
+            const startCheck = new Date(event.startDate);
+            startCheck.setHours(0,0,0,0);
+            const todayCheck = new Date(now);
+            todayCheck.setHours(0,0,0,0);
+            
+            if (todayCheck >= startCheck) {
+                dateMatch = (now.getDate() === eventStartDate.getDate());
+            }
+        }
+
+        if (!dateMatch) return false;
+
+        // Check time window
+        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+        const startMinutes = startHour * 60 + startMin;
+        const endMinutes = startMinutes + duration;
+
+        // Handle midnight wrapping if needed (simple version assumes same day for now)
+        return (nowMinutes >= startMinutes && nowMinutes < endMinutes);
+    }
+
 
     /**
      * Refresh playlist content without restarting if possible

@@ -670,18 +670,61 @@ class AdminPanel {
         const form = document.getElementById('addScheduleForm');
         const recurrenceSelect = document.getElementById('scheduleRecurrence');
         const daysSelection = document.getElementById('daysSelection');
+        
+        // New elements
+        const contentTypeSelect = document.getElementById('scheduleContentType');
+        const playlistContainer = document.getElementById('schedulePlaylistContainer');
+        const videoContainer = document.getElementById('scheduleVideoContainer');
+        const playlistSelect = document.getElementById('schedulePlaylistSelect');
 
         if (addBtn) {
             addBtn.addEventListener('click', () => {
                 if (modal) modal.style.display = 'flex';
                 // Reset form
                 if (form) form.reset();
+                
+                // Populate playlists
+                if (playlistSelect) {
+                    const playlists = Utils.storage.get('adminPlaylists') || {};
+                    playlistSelect.innerHTML = '';
+                    
+                    // Add default first
+                    const defaultOpt = document.createElement('option');
+                    defaultOpt.value = 'default';
+                    defaultOpt.textContent = 'Default Playlist';
+                    playlistSelect.appendChild(defaultOpt);
+                    
+                    Object.keys(playlists).forEach(id => {
+                        if (id === 'default') return;
+                        const option = document.createElement('option');
+                        option.value = id;
+                        option.textContent = id.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        playlistSelect.appendChild(option);
+                    });
+                }
+
                 // Set default date/time
                 const now = new Date();
                 const dateInput = document.getElementById('scheduleDate');
                 const timeInput = document.getElementById('scheduleTime');
                 if (dateInput) dateInput.value = now.toISOString().split('T')[0];
                 if (timeInput) timeInput.value = now.toTimeString().slice(0, 5);
+                
+                // Reset visibility
+                if (playlistContainer) playlistContainer.style.display = 'block';
+                if (videoContainer) videoContainer.style.display = 'none';
+            });
+        }
+
+        if (contentTypeSelect) {
+            contentTypeSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'playlist') {
+                    if (playlistContainer) playlistContainer.style.display = 'block';
+                    if (videoContainer) videoContainer.style.display = 'none';
+                } else {
+                    if (playlistContainer) playlistContainer.style.display = 'none';
+                    if (videoContainer) videoContainer.style.display = 'block';
+                }
             });
         }
 
@@ -695,12 +738,6 @@ class AdminPanel {
         if (recurrenceSelect) {
             recurrenceSelect.addEventListener('change', (e) => {
                 if (daysSelection) {
-                    // Show days selection only for weekly if we wanted to allow multiple days per week
-                    // For now, simple weekly implies the day of the selected date.
-                    // But user might want "Weekly on Mon, Wed, Fri".
-                    // The request said "add schedule for the day weekly and monthly".
-                    // If I select "Weekly", maybe I should show checkboxes for days?
-                    // Let's implement day selection for Weekly.
                     daysSelection.style.display = e.target.value === 'weekly' ? 'block' : 'none';
                 }
             });
@@ -728,12 +765,33 @@ class AdminPanel {
         const duration = parseInt(document.getElementById('scheduleDuration').value) || 60;
         const recurrence = document.getElementById('scheduleRecurrence').value;
         
+        const contentType = document.getElementById('scheduleContentType').value;
+        let contentId = '';
+        let contentName = '';
+
+        if (contentType === 'playlist') {
+            const select = document.getElementById('schedulePlaylistSelect');
+            contentId = select.value;
+            contentName = select.options[select.selectedIndex].text;
+        } else {
+            const input = document.getElementById('scheduleVideoId').value;
+            // Extract ID if URL
+            let videoId = input;
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = input.match(regExp);
+            if (match && match[2].length === 11) {
+                videoId = match[2];
+            }
+            contentId = videoId;
+            contentName = 'YouTube Video';
+        }
+        
         let days = [];
         if (recurrence === 'weekly') {
             document.querySelectorAll('input[name="days"]:checked').forEach(cb => {
                 days.push(parseInt(cb.value));
             });
-            // If no days selected but weekly, default to the day of the date
+            // If no days selected but weekly, default to the day of the selected date
             if (days.length === 0) {
                 const d = new Date(date);
                 days.push(d.getDay());
@@ -749,6 +807,9 @@ class AdminPanel {
             duration,
             recurrence,
             days: recurrence === 'weekly' ? days : null,
+            contentType,
+            contentId,
+            contentName,
             created: Date.now()
         };
 
@@ -820,6 +881,10 @@ class AdminPanel {
                     <td>
                         <div style="font-weight: bold;">${item.title}</div>
                         <div style="font-size: 0.8em; color: #aaa;">${item.description || ''}</div>
+                        <div style="font-size: 0.8em; margin-top: 4px; color: #4CAF50;">
+                            ${item.contentType === 'video' ? 'Video: ' : 'Playlist: '} 
+                            ${item.contentName || item.contentId || 'Default'}
+                        </div>
                     </td>
                     <td>
                         <div>${item.startDate}</div>

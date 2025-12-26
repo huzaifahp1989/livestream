@@ -538,6 +538,27 @@
                     <label>Program Title</label>
                     <input type="text" class="form-input" id="scheduleTitle" required>
                 </div>
+                
+                <div class="form-group">
+                    <label>Content Type</label>
+                    <select class="form-select" id="scheduleContentType">
+                        <option value="playlist">Playlist</option>
+                        <option value="video">YouTube Video</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="schedulePlaylistContainer">
+                    <label>Select Playlist</label>
+                    <select class="form-select" id="schedulePlaylistSelect">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+                <div class="form-group" id="scheduleVideoContainer" style="display: none;">
+                    <label>YouTube Video ID or URL</label>
+                    <input type="text" class="form-input" id="scheduleVideoId" placeholder="e.g. dQw4w9WgXcQ">
+                </div>
+
                 <div class="form-group">
                     <label>Description (Optional)</label>
                     <textarea class="form-textarea" id="scheduleDescription" rows="2"></textarea>
