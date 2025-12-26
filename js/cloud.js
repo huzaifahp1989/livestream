@@ -52,6 +52,20 @@ class CloudStorage {
             
             // Switch to Firestore
             this.db = firebase.firestore();
+
+            // Enable Offline Persistence
+            try {
+                await this.db.enablePersistence();
+                console.log('✅ Firestore Offline Persistence Enabled');
+            } catch (err) {
+                if (err.code == 'failed-precondition') {
+                    // Multiple tabs open, persistence can only be enabled in one tab at a a time.
+                    console.warn('Persistence failed: Multiple tabs open');
+                } else if (err.code == 'unimplemented') {
+                    // The current browser does not support all of the features required to enable persistence
+                    console.warn('Persistence not supported by browser');
+                }
+            }
             
             // Test connection by trying to read metadata (optional, but good for verification)
             // or just assume connected.
