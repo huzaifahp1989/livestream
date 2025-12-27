@@ -541,7 +541,7 @@ class AdminPanel {
         if (cancelCreate) cancelCreate.addEventListener('click', closeCreate);
 
         if (createForm) {
-            createForm.addEventListener('submit', (e) => {
+            createForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const nameInput = document.getElementById('newPlaylistName');
                 const name = nameInput.value.trim();
@@ -556,6 +556,12 @@ class AdminPanel {
 
                     playlists[id] = [];
                     Utils.storage.set('adminPlaylists', playlists);
+
+                    // Sync to Cloud
+                    if (window.Cloud && window.Cloud.enabled) {
+                        if (!window.Cloud.initialized) await window.Cloud.init();
+                        await window.Cloud.set('playlists', playlists);
+                    }
                     
                     this.currentPlaylistId = id;
                     this.updatePlaylistSelector(playlists);
@@ -567,7 +573,7 @@ class AdminPanel {
         }
 
         if (deleteBtn) {
-            deleteBtn.addEventListener('click', () => {
+            deleteBtn.addEventListener('click', async () => {
                 if (this.currentPlaylistId === 'default') {
                     Utils.showToast('Cannot delete default playlist', 'error');
                     return;
@@ -577,6 +583,12 @@ class AdminPanel {
                     let playlists = Utils.storage.get('adminPlaylists') || {};
                     delete playlists[this.currentPlaylistId];
                     Utils.storage.set('adminPlaylists', playlists);
+                    
+                    // Sync to Cloud
+                    if (window.Cloud && window.Cloud.enabled) {
+                        if (!window.Cloud.initialized) await window.Cloud.init();
+                        await window.Cloud.set('playlists', playlists);
+                    }
                     
                     this.currentPlaylistId = 'default';
                     this.updatePlaylistSelector(playlists);

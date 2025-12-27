@@ -470,6 +470,28 @@
     </div>
 
     <!-- Modals -->
+    <div class="modal" id="createPlaylistModal" style="display: none;">
+        <div class="modal__backdrop"></div>
+        <div class="modal__content modal__content--form">
+            <button class="modal__close" id="closeCreatePlaylistModal">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+            <h2>Create New Playlist</h2>
+            <form id="createPlaylistForm">
+                <div class="form-group">
+                    <label>Playlist Name</label>
+                    <input type="text" class="form-input" id="newPlaylistName" required placeholder="e.g. Morning Recitations">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn--primary">Create Playlist</button>
+                    <button type="button" class="btn btn--secondary" id="cancelCreatePlaylist">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="modal" id="addVideoModal" style="display: none;">
         <div class="modal__backdrop"></div>
         <div class="modal__content modal__content--form">
