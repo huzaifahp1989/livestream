@@ -74,7 +74,7 @@ function initUI() {
     
     if (menuToggle && nav) {
         menuToggle.addEventListener('click', () => {
-            nav.classList.toggle('nav--active');
+            nav.classList.toggle('active');
             menuToggle.classList.toggle('active');
             
             // Animate hamburger icon
@@ -85,10 +85,10 @@ function initUI() {
 
     // Close menu when clicking outside
     document.addEventListener('click', (e) => {
-        if (nav && nav.classList.contains('nav--active') && 
+        if (nav && nav.classList.contains('active') && 
             !nav.contains(e.target) && 
             !menuToggle.contains(e.target)) {
-            nav.classList.remove('nav--active');
+            nav.classList.remove('active');
             menuToggle.classList.remove('active');
         }
     });
