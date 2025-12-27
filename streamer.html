@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Streamer Panel - Islamic Live TV</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/player.css">
+    <style>
+        body {
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .streamer-card {
+            background: var(--color-bg-secondary);
+            padding: 30px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: #444;
+            color: #aaa;
+        }
+        .status-badge.live {
+            background: var(--color-primary);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--color-text-muted);
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+            background: rgba(0,0,0,0.2);
+            color: white;
+            font-size: 16px;
+        }
+        .btn-live {
+            width: 100%;
+            padding: 15px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        .btn-start {
+            background: var(--color-primary);
+            color: white;
+        }
+        .btn-start:disabled {
+            background: #444;
+            cursor: not-allowed;
+        }
+        .btn-stop {
+            background: #e74c3c;
+            color: white;
+            display: none;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.7); }
+            70% { opacity: 1; box-shadow: 0 0 0 10px rgba(233, 69, 96, 0); }
+            100% { opacity: 1; box-shadow: 0 0 0 0 rgba(233, 69, 96, 0); }
+        }
+        .login-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--color-bg);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-overlay">
+        <div class="streamer-card">
+            <h2>Streamer Access</h2>
+            <div class="input-group">
+                <input type="password" id="passwordInput" placeholder="Enter Access Code">
+            </div>
+            <button class="btn btn-live btn-start" id="loginBtn">Login</button>
+        </div>
+    </div>
+
+    <!-- Main Control -->
+    <div class="streamer-card">
+        <div id="statusBadge" class="status-badge">OFF AIR</div>
+        
+        <h2>Mobile Streamer</h2>
+        <p style="color: var(--color-text-muted); margin-bottom: 20px;">
+            Go live instantly. This will interrupt the current broadcast.
+        </p>
+
+        <div class="input-group">
+            <label>YouTube Video ID</label>
+            <input type="text" id="videoIdInput" placeholder="e.g. jNQXAC9IVRw">
+        </div>
+
+        <button id="goLiveBtn" class="btn btn-live btn-start">GO LIVE</button>
+        <button id="stopLiveBtn" class="btn btn-live btn-stop">STOP BROADCAST</button>
+        
+        <div id="messageArea" style="margin-top: 15px; min-height: 20px; font-size: 14px;"></div>
+    </div>
+
+    <!-- Dependencies -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/cloud.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loginScreen = document.getElementById('loginScreen');
+            const passwordInput = document.getElementById('passwordInput');
+            const loginBtn = document.getElementById('loginBtn');
+            const goLiveBtn = document.getElementById('goLiveBtn');
+            const stopLiveBtn = document.getElementById('stopLiveBtn');
+            const videoIdInput = document.getElementById('videoIdInput');
+            const statusBadge = document.getElementById('statusBadge');
+            const messageArea = document.getElementById('messageArea');
+
+            // 1. Auth Check
+            const checkAuth = () => {
+                if (passwordInput.value === CONFIG.admin.defaultPassword) {
+                    loginScreen.classList.add('hidden');
+                    initStreamer();
+                } else {
+                    alert('Invalid Access Code');
+                }
+            };
+            loginBtn.addEventListener('click', checkAuth);
+
+            // 2. Initialize
+            async function initStreamer() {
+                if (!window.Cloud) {
+                    messageArea.textContent = 'Error: Cloud module missing';
+                    return;
+                }
+                
+                messageArea.textContent = 'Connecting to Cloud...';
+                if (!window.Cloud.initialized) {
+                    await window.Cloud.init();
+                }
+                
+                messageArea.textContent = 'Ready';
+                
+                // Listen for current state
+                window.Cloud.listen('liveOverride', (data) => {
+                    updateUI(data);
+                });
+            }
+
+            // 3. UI Update Logic
+            function updateUI(data) {
+                if (data && data.active) {
+                    // IS LIVE
+                    statusBadge.textContent = 'ON AIR';
+                    statusBadge.classList.add('live');
+                    goLiveBtn.classList.add('hidden');
+                    stopLiveBtn.style.display = 'block';
+                    videoIdInput.disabled = true;
+                    if (data.videoId) videoIdInput.value = data.videoId;
+                    messageArea.textContent = 'You are currently broadcasting live.';
+                    messageArea.style.color = 'var(--color-primary)';
+                } else {
+                    // OFF AIR
+                    statusBadge.textContent = 'OFF AIR';
+                    statusBadge.classList.remove('live');
+                    goLiveBtn.classList.remove('hidden');
+                    stopLiveBtn.style.display = 'none';
+                    videoIdInput.disabled = false;
+                    messageArea.textContent = 'Ready to stream.';
+                    messageArea.style.color = 'var(--color-text-muted)';
+                }
+            }
+
+            // 4. Go Live Action
+            goLiveBtn.addEventListener('click', async () => {
+                const videoId = Utils.getYouTubeVideoId(videoIdInput.value.trim());
+                if (!videoId) {
+                    alert('Please enter a valid YouTube Video ID or Link');
+                    return;
+                }
+
+                if (confirm('Are you sure you want to interrupt the current broadcast and GO LIVE?')) {
+                    goLiveBtn.disabled = true;
+                    messageArea.textContent = 'Starting broadcast...';
+                    
+                    const success = await window.Cloud.set('liveOverride', {
+                        active: true,
+                        videoId: videoId,
+                        timestamp: Date.now(),
+                        presenter: 'Mobile Streamer'
+                    });
+
+                    if (success) {
+                        // UI will update via listener
+                    } else {
+                        alert('Failed to go live. Check connection.');
+                        goLiveBtn.disabled = false;
+                    }
+                }
+            });
+
+            // 5. Stop Live Action
+            stopLiveBtn.addEventListener('click', async () => {
+                if (confirm('End the live broadcast and return to scheduled programming?')) {
+                    stopLiveBtn.disabled = true;
+                    messageArea.textContent = 'Stopping broadcast...';
+                    
+                    const success = await window.Cloud.set('liveOverride', {
+                        active: false
+                    });
+
+                    if (success) {
+                        // UI will update via listener
+                        stopLiveBtn.disabled = false; // Reset for next time
+                    } else {
+                        alert('Failed to stop broadcast. Check connection.');
+                        stopLiveBtn.disabled = false;
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

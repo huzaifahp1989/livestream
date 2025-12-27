@@ -11,6 +11,7 @@ class VideoPlayer {
         this.playlist = CONFIG.defaultPlaylist;
         this.currentPlaylistId = 'default'; // Track current playlist ID
         this.isLiveMode = false;
+        this.isLiveOverride = false; // Track if we are in forced live mode
         this.liveSource = null;
         this.retryCount = 0;
         this.maxRetries = CONFIG.stream.reconnectAttempts;
@@ -73,6 +74,71 @@ class VideoPlayer {
                 // The existing interval will pick this up, or we can handle immediately
             }
         });
+
+        // Listen for LIVE OVERRIDE (Breaking News / Mobile Streamer)
+        window.Cloud.listen('liveOverride', (data) => {
+            console.log('Received Live Override Signal:', data);
+            this.handleLiveOverride(data);
+        });
+    }
+
+    /**
+     * Handle Live Override (Breaking News)
+     */
+    handleLiveOverride(data) {
+        if (!data) return;
+
+        if (data.active) {
+            // Check if we are already playing this
+            const currentVideoId = this.player && typeof this.player.getVideoData === 'function' 
+                ? this.player.getVideoData().video_id 
+                : null;
+
+            if (this.isLiveOverride && currentVideoId === data.videoId) {
+                return; // Already playing
+            }
+
+            console.log('⚠️ ACTIVATING LIVE OVERRIDE:', data.videoId);
+            this.isLiveOverride = true;
+            this.isLiveMode = true; // Treat as live mode for monitoring
+            
+            // Show Alert
+            Utils.showToast('🔴 LIVE BROADCAST STARTED', 'error', 5000);
+            
+            // Play Video
+            if (this.player && typeof this.player.loadVideoById === 'function') {
+                this.player.loadVideoById(data.videoId);
+                this.updateProgramInfoOverride('LIVE BROADCAST');
+            }
+
+            // Create/Show Live Badge
+            this.updateLiveBadge(true);
+
+        } else {
+            // Override ended
+            if (this.isLiveOverride) {
+                console.log('✅ LIVE OVERRIDE ENDED');
+                this.isLiveOverride = false;
+                this.isLiveMode = false;
+                
+                Utils.showToast('Live broadcast ended. Returning to schedule.', 'success', 5000);
+                
+                // Immediately check schedule to resume normal programming
+                this.checkSchedule(true);
+            }
+        }
+    }
+
+    /**
+     * Update Program Info for Override
+     */
+    updateProgramInfoOverride(title) {
+        const nowPlayingTitle = document.getElementById('nowPlayingTitle');
+        if (nowPlayingTitle) {
+            nowPlayingTitle.textContent = title;
+            nowPlayingTitle.style.color = '#e74c3c'; // Red for live
+            nowPlayingTitle.style.animation = 'pulse 2s infinite';
+        }
     }
 
     /**
@@ -192,6 +258,12 @@ class VideoPlayer {
      * Check schedule and update playlist if needed
      */
     checkSchedule(force = false, checkContent = false) {
+        // Prevent schedule check from interrupting Live Override
+        if (this.isLiveOverride) {
+            console.log('Skipping schedule check: Live Override Active');
+            return;
+        }
+
         const now = new Date();
         const scheduleEvents = Utils.storage.get('scheduleEvents') || [];
         
@@ -526,7 +598,14 @@ class VideoPlayer {
                              Utils.storage.set('scheduleEvents', schedule);
                          }
 
-                         this.checkSchedule(true, true); // force=true, checkContent=true
+                         // Check for Live Override First
+                         const liveOverride = await window.Cloud.get('liveOverride');
+                         if (liveOverride && liveOverride.active) {
+                             this.handleLiveOverride(liveOverride);
+                         } else {
+                             this.checkSchedule(true, true); // force=true, checkContent=true
+                         }
+
                      } catch (err) {
                          console.error('Error fetching initial cloud data:', err);
                          this.checkSchedule(true);
