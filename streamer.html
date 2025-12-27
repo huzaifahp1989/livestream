@@ -135,6 +135,7 @@
     <!-- Dependencies -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     
     <script src="js/config.js"></script>
     <script src="js/utils.js"></script>
@@ -180,6 +181,19 @@
                 window.Cloud.listen('liveOverride', (data) => {
                     updateUI(data);
                 });
+
+                // Load Last Used ID
+                const lastId = localStorage.getItem('lastLiveId');
+                if (lastId) {
+                    videoIdInput.value = lastId;
+                }
+                
+                // Also check Cloud for shared last ID (optional, but good for cross-device)
+                const cloudConfig = await window.Cloud.get('streamerConfig');
+                if (cloudConfig && cloudConfig.lastVideoId) {
+                     // Prefer cloud if it's different/newer, or just use it if local is empty
+                     if (!videoIdInput.value) videoIdInput.value = cloudConfig.lastVideoId;
+                }
             }
 
             // 3. UI Update Logic
@@ -189,24 +203,51 @@
                     statusBadge.textContent = 'ON AIR';
                     statusBadge.classList.add('live');
                     goLiveBtn.classList.add('hidden');
+                    goLiveCameraBtn.classList.add('hidden');
                     stopLiveBtn.style.display = 'block';
                     videoIdInput.disabled = true;
-                    if (data.videoId) videoIdInput.value = data.videoId;
-                    messageArea.textContent = 'You are currently broadcasting live.';
+                    if (data.videoId && data.type !== 'webrtc') videoIdInput.value = data.videoId;
+                    
+                    if (data.type === 'webrtc') {
+                        messageArea.textContent = 'Broadcasting via Camera...';
+                        localPreview.style.display = 'block';
+                    } else {
+                        messageArea.textContent = 'You are currently broadcasting live via YouTube.';
+                        localPreview.style.display = 'none';
+                    }
                     messageArea.style.color = 'var(--color-primary)';
                 } else {
                     // OFF AIR
                     statusBadge.textContent = 'OFF AIR';
                     statusBadge.classList.remove('live');
                     goLiveBtn.classList.remove('hidden');
+                    goLiveCameraBtn.classList.remove('hidden');
                     stopLiveBtn.style.display = 'none';
                     videoIdInput.disabled = false;
+                    localPreview.style.display = 'none';
+                    
+                    // Stop Local Stream if active
+                    if (localStream) {
+                        localStream.getTracks().forEach(track => track.stop());
+                        localStream = null;
+                    }
+                    if (peer) {
+                        peer.destroy();
+                        peer = null;
+                    }
+
+                    // Restore last used ID if input is empty
+                    if (!videoIdInput.value) {
+                         const lastId = localStorage.getItem('lastLiveId');
+                         if (lastId) videoIdInput.value = lastId;
+                    }
+                    
                     messageArea.textContent = 'Ready to stream.';
                     messageArea.style.color = 'var(--color-text-muted)';
                 }
             }
 
-            // 4. Go Live Action
+            // 4. Go Live Action (YouTube)
             goLiveBtn.addEventListener('click', async () => {
                 const videoId = Utils.getYouTubeVideoId(videoIdInput.value.trim());
                 if (!videoId) {
@@ -214,43 +255,103 @@
                     return;
                 }
 
-                if (confirm('Are you sure you want to interrupt the current broadcast and GO LIVE?')) {
+                if (confirm('Are you sure you want to interrupt the current broadcast and GO LIVE (YouTube)?')) {
                     goLiveBtn.disabled = true;
                     messageArea.textContent = 'Starting broadcast...';
                     
+                    // Save Persistence
+                    localStorage.setItem('lastLiveId', videoId);
+                    await window.Cloud.set('streamerConfig', { lastVideoId: videoId });
+                    
                     const success = await window.Cloud.set('liveOverride', {
                         active: true,
+                        type: 'youtube',
                         videoId: videoId,
                         timestamp: Date.now(),
                         presenter: 'Mobile Streamer'
                     });
-
+                    
                     if (success) {
-                        // UI will update via listener
+                        // updateUI handled by listener
                     } else {
-                        alert('Failed to go live. Check connection.');
                         goLiveBtn.disabled = false;
+                        messageArea.textContent = 'Error starting broadcast.';
                     }
                 }
             });
 
-            // 5. Stop Live Action
-            stopLiveBtn.addEventListener('click', async () => {
-                if (confirm('End the live broadcast and return to scheduled programming?')) {
-                    stopLiveBtn.disabled = true;
-                    messageArea.textContent = 'Stopping broadcast...';
-                    
-                    const success = await window.Cloud.set('liveOverride', {
-                        active: false
-                    });
+            // 5. Go Live Action (Camera/WebRTC)
+            goLiveCameraBtn.addEventListener('click', async () => {
+                if (confirm('Start Live Camera Broadcast? (Note: Only supports limited viewers)')) {
+                    goLiveCameraBtn.disabled = true;
+                    messageArea.textContent = 'Initializing Camera...';
 
-                    if (success) {
-                        // UI will update via listener
-                        stopLiveBtn.disabled = false; // Reset for next time
-                    } else {
-                        alert('Failed to stop broadcast. Check connection.');
-                        stopLiveBtn.disabled = false;
+                    try {
+                        // 1. Get User Media
+                        localStream = await navigator.mediaDevices.getUserMedia({ 
+                            video: { facingMode: 'user' }, 
+                            audio: true 
+                        });
+                        localPreview.srcObject = localStream;
+                        localPreview.style.display = 'block';
+
+                        // 2. Init PeerJS
+                        messageArea.textContent = 'Connecting to P2P Network...';
+                        peer = new Peer(null, {
+                            debug: 2
+                        });
+
+                        peer.on('open', async (id) => {
+                            currentPeerId = id;
+                            console.log('My peer ID is: ' + id);
+                            messageArea.textContent = 'Broadcasting...';
+
+                            // 3. Listen for incoming connections
+                            peer.on('connection', (conn) => {
+                                conn.on('open', () => {
+                                    // Send stream on connection? No, PeerJS handles calls differently.
+                                    // Actually for video, we wait for 'call'
+                                });
+                            });
+
+                            // Handle incoming calls (Viewers calling us)
+                            peer.on('call', (call) => {
+                                console.log('Incoming viewer connection...');
+                                call.answer(localStream); // Answer the call with our A/V stream.
+                            });
+
+                            // 4. Update Cloud
+                            await window.Cloud.set('liveOverride', {
+                                active: true,
+                                type: 'webrtc',
+                                peerId: id,
+                                timestamp: Date.now(),
+                                presenter: 'Mobile Camera'
+                            });
+                        });
+
+                        peer.on('error', (err) => {
+                            console.error(err);
+                            alert('Streaming Error: ' + err);
+                            goLiveCameraBtn.disabled = false;
+                        });
+
+                    } catch (err) {
+                        console.error(err);
+                        alert('Could not access camera/mic: ' + err);
+                        goLiveCameraBtn.disabled = false;
                     }
+                }
+            });
+
+            // 6. Stop Broadcast
+            stopLiveBtn.addEventListener('click', async () => {
+                if (confirm('Stop the live broadcast?')) {
+                    await window.Cloud.set('liveOverride', {
+                        active: false,
+                        timestamp: Date.now()
+                    });
+                    // Cleanup handled by updateUI
                 }
             });
         });

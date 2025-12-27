@@ -105,10 +105,17 @@ class VideoPlayer {
             // Show Alert
             Utils.showToast('🔴 LIVE BROADCAST STARTED', 'error', 5000);
             
-            // Play Video
-            if (this.player && typeof this.player.loadVideoById === 'function') {
-                this.player.loadVideoById(data.videoId);
-                this.updateProgramInfoOverride('LIVE BROADCAST');
+            if (data.type === 'webrtc' && data.peerId) {
+                // HANDLE WEBRTC STREAM
+                this.startWebRTCStream(data.peerId);
+            } else {
+                // HANDLE YOUTUBE STREAM
+                this.cleanupWebRTC();
+                // Play Video
+                if (this.player && typeof this.player.loadVideoById === 'function') {
+                    this.player.loadVideoById(data.videoId);
+                    this.updateProgramInfoOverride('LIVE BROADCAST');
+                }
             }
 
             // Create/Show Live Badge
@@ -121,11 +128,88 @@ class VideoPlayer {
                 this.isLiveOverride = false;
                 this.isLiveMode = false;
                 
+                this.cleanupWebRTC();
+                
                 Utils.showToast('Live broadcast ended. Returning to schedule.', 'success', 5000);
                 
                 // Immediately check schedule to resume normal programming
                 this.checkSchedule(true);
             }
+        }
+    }
+
+    /**
+     * Start WebRTC Stream (Viewer)
+     */
+    startWebRTCStream(remotePeerId) {
+        console.log('Starting WebRTC Stream connection to:', remotePeerId);
+        
+        const videoElement = document.getElementById('liveVideo');
+        const youtubeElement = document.getElementById('videoPlayer');
+        
+        // Switch UI
+        if (youtubeElement) youtubeElement.style.display = 'none';
+        if (videoElement) {
+            videoElement.style.display = 'block';
+            videoElement.srcObject = null;
+        }
+
+        this.updateProgramInfoOverride('LIVE CAMERA FEED');
+
+        // Init PeerJS
+        if (this.peer) this.peer.destroy();
+        
+        this.peer = new Peer(null, { debug: 1 });
+        
+        this.peer.on('open', (id) => {
+            console.log('My Viewer ID:', id);
+            
+            // Call the streamer
+            const call = this.peer.call(remotePeerId, null, {
+                metadata: { type: 'viewer' }
+            });
+            
+            call.on('stream', (remoteStream) => {
+                console.log('Received Remote Stream');
+                if (videoElement) {
+                    videoElement.srcObject = remoteStream;
+                    videoElement.play().catch(e => console.error('Autoplay failed:', e));
+                }
+            });
+
+            call.on('error', (err) => {
+                console.error('Call Error:', err);
+                Utils.showToast('Stream Connection Error', 'error');
+            });
+
+            this.webRTCConn = call;
+        });
+
+        this.peer.on('error', (err) => {
+            console.error('Peer Error:', err);
+        });
+    }
+
+    /**
+     * Cleanup WebRTC
+     */
+    cleanupWebRTC() {
+        const videoElement = document.getElementById('liveVideo');
+        const youtubeElement = document.getElementById('videoPlayer');
+        
+        if (videoElement) {
+            videoElement.style.display = 'none';
+            videoElement.srcObject = null;
+        }
+        if (youtubeElement) youtubeElement.style.display = 'block';
+
+        if (this.webRTCConn) {
+            this.webRTCConn.close();
+            this.webRTCConn = null;
+        }
+        if (this.peer) {
+            this.peer.destroy();
+            this.peer = null;
         }
     }
 
