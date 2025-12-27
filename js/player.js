@@ -49,8 +49,16 @@ class VideoPlayer {
     setupCloudListeners() {
         window.Cloud.listen('playlists', (playlists) => {
             if (playlists) {
-                console.log('Received Cloud Update');
+                console.log('Received Cloud Update: Playlists');
                 Utils.storage.set('adminPlaylists', playlists);
+                this.checkSchedule(false, true);
+            }
+        });
+
+        window.Cloud.listen('schedule', (schedule) => {
+            if (schedule) {
+                console.log('Received Cloud Update: Schedule');
+                Utils.storage.set('scheduleEvents', schedule);
                 this.checkSchedule(false, true);
             }
         });
@@ -498,18 +506,29 @@ class VideoPlayer {
         // Initial playlist load (Force Cloud Check)
         if (window.Cloud && window.Cloud.enabled) {
              if (!window.Cloud.initialized) {
-                 window.Cloud.init().then(() => {
-                     // Fetch latest playlist immediately
-                     window.Cloud.get('playlists').then(playlists => {
+                 window.Cloud.init().then(async () => {
+                     try {
+                         // Fetch latest playlist and schedule immediately
+                         const [playlists, schedule] = await Promise.all([
+                             window.Cloud.get('playlists'),
+                             window.Cloud.get('schedule')
+                         ]);
+
                          if (playlists) {
                              console.log('Initial Cloud Playlist Fetch Success');
                              Utils.storage.set('adminPlaylists', playlists);
-                             this.checkSchedule(true, true); // force=true, checkContent=true
-                         } else {
-                             // Fallback to local
-                             this.checkSchedule(true);
                          }
-                     });
+                         
+                         if (schedule) {
+                             console.log('Initial Cloud Schedule Fetch Success');
+                             Utils.storage.set('scheduleEvents', schedule);
+                         }
+
+                         this.checkSchedule(true, true); // force=true, checkContent=true
+                     } catch (err) {
+                         console.error('Error fetching initial cloud data:', err);
+                         this.checkSchedule(true);
+                     }
                  });
              }
         } else {
@@ -596,14 +615,16 @@ class VideoPlayer {
                 width: '100%',
                 playerVars: {
                     autoplay: 1,
-                    controls: 1,
+                    controls: 0,
                     modestbranding: 1,
                     rel: 0,
                     showinfo: 0,
                     iv_load_policy: 3,
                     playsinline: 1,
                     enablejsapi: 1,
-                    origin: window.location.origin
+                    origin: window.location.origin,
+                    fs: 0, // Disable fullscreen button (reduces branding)
+                    disablekb: 1 // Disable keyboard controls (prevents seeking/pausing)
                 },
                 events: {
                     onReady: (event) => {

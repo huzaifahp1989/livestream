@@ -23,7 +23,7 @@ const CONFIG = {
     player: {
         autoplay: true,
         loop: true,
-        controls: 1,
+        controls: 0,
         modestbranding: 1,
         rel: 0,
         showinfo: 0,

@@ -1586,20 +1586,6 @@ class AdminPanel {
     }
 
     /**
-     * Load schedule
-     */
-    loadSchedule() {
-        const tbody = document.getElementById('scheduleTableBody');
-        if (!tbody) return;
-
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading schedule...</td></tr>';
-
-        setTimeout(() => {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Schedule items will appear here</td></tr>';
-        }, 500);
-    }
-
-    /**
      * Load analytics
      */
     loadAnalytics() {
