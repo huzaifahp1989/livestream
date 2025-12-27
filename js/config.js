@@ -36,7 +36,8 @@ const CONFIG = {
     // Stream Settings
     stream: {
         autoFallback: true, // Auto fallback to playlist if live stream fails
-        lowLatency: false,
+        lowLatency: true,   // Optimize for low latency
+        forceLiveEdge: true, // Force player to keep up with live edge
         reconnectAttempts: 3,
         reconnectDelay: 5000, // ms
     },

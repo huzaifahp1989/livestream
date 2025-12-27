@@ -16,6 +16,8 @@ class VideoPlayer {
         this.maxRetries = CONFIG.stream.reconnectAttempts;
         this.scheduleCheckInterval = null;
         this.lastScheduleCheck = 0;
+        this.liveMonitorInterval = null;
+        this.bufferingTimeout = null;
     }
 
     /**
@@ -666,6 +668,38 @@ class VideoPlayer {
     }
 
     /**
+     * Monitor live stream to ensure we stay at live edge
+     */
+    monitorLiveStream() {
+        if (this.liveMonitorInterval) clearInterval(this.liveMonitorInterval);
+        
+        // Only monitor if enabled in config
+        if (!CONFIG.stream.forceLiveEdge) return;
+
+        this.liveMonitorInterval = setInterval(() => {
+            if (!this.player || typeof this.player.getDuration !== 'function') return;
+
+            // Check if it's a known live stream (from default playlist) or isLiveMode
+            const currentId = this.playlist[this.currentIndex];
+            const isDefaultLive = CONFIG.defaultPlaylist.includes(currentId);
+            
+            if (this.isLiveMode || isDefaultLive) {
+                const duration = this.player.getDuration();
+                const currentTime = this.player.getCurrentTime();
+                
+                // If duration is available (YouTube Live typically returns a window or increasing duration)
+                if (duration > 0) {
+                    // If we are behind by more than 30 seconds
+                    if (duration - currentTime > 30) {
+                        console.log(`Live stream lagging (${(duration - currentTime).toFixed(1)}s), seeking to live edge...`);
+                        this.player.seekTo(duration); // Seek to end
+                    }
+                }
+            }
+        }, 10000); // Check every 10s
+    }
+
+    /**
      * Handle player state changes
      */
     onPlayerStateChange(event) {
@@ -700,8 +734,38 @@ class VideoPlayer {
             }
             this.resetRetryCount();
             this.trackAnalytics('play');
+
+            // Start Live Monitor
+            this.monitorLiveStream();
+            
+            // Clear buffering timeout
+            if (this.bufferingTimeout) {
+                clearTimeout(this.bufferingTimeout);
+                this.bufferingTimeout = null;
+            }
+
         } else if (event.data === YT.PlayerState.PAUSED) {
             this.showOverlay();
+            // Stop Live Monitor
+            if (this.liveMonitorInterval) {
+                clearInterval(this.liveMonitorInterval);
+                this.liveMonitorInterval = null;
+            }
+
+        } else if (event.data === YT.PlayerState.BUFFERING) {
+            // Handle stuck buffering
+            if (this.bufferingTimeout) clearTimeout(this.bufferingTimeout);
+            this.bufferingTimeout = setTimeout(() => {
+                console.log('Stuck buffering, attempting to recover...');
+                // Try to seek to live or reload
+                const duration = this.player.getDuration();
+                if (duration) {
+                    this.player.seekTo(duration);
+                } else {
+                    // Force reload current video
+                    this.player.loadVideoById(this.playlist[this.currentIndex]);
+                }
+            }, 15000); // 15 seconds max buffer
         }
     }
 
